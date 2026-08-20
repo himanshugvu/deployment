@@ -19,7 +19,7 @@ current service:
 cd services/mesh-lab
 mvn test
 mvn package
-docker build -t ghcr.io/your-org/mesh-lab:0.0.1 .
+docker build -t ghcr.io/himanshugvu/mesh-lab:0.0.1 .
 ```
 
 ## Kubernetes deploy
@@ -34,12 +34,11 @@ kubectl port-forward svc/mesh-lab-mesh-lab 8080:80 -n mesh-lab
 ## Argo CD
 
 1. Install Argo CD in your cluster.
-2. Push this repository to Git.
-3. Build and push the service image to your container registry.
-4. Update `repoURL`, `image.repository`, and `image.tag` in `deploy/argocd/application.yaml` to your real values.
-5. Apply the application manifest.
+2. Build and push `ghcr.io/himanshugvu/mesh-lab:0.0.1` to GitHub Container Registry.
+3. Apply the namespace and Argo CD application manifests.
 
 ```powershell
+kubectl apply -f deploy/argocd/namespace.yaml
 kubectl apply -f deploy/argocd/application.yaml
 ```
 
@@ -54,4 +53,3 @@ The intended next additions are:
 - Istio and Kiali
 - Prometheus and telemetry
 - Argo Rollouts for progressive delivery
-# deployment
