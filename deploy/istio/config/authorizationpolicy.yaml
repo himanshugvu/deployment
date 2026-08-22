@@ -17,3 +17,10 @@ spec:
       to:
         - operation:
             methods: ["GET", "POST"]
+    # Plaintext callers cannot present a verified principal, so the metrics
+    # endpoint is allowed separately for scraping (Prometheus lives outside
+    # the mesh).
+    - to:
+        - operation:
+            methods: ["GET"]
+            paths: ["/actuator/prometheus"]
