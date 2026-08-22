@@ -12,6 +12,7 @@ spec:
       chart: kube-prometheus-stack
       targetRevision: 88.5.2
       helm:
+        releaseName: monitoring
         valueFiles:
           - $values/deploy/observability/kube-prometheus-stack-values.yaml
     - repoURL: https://github.com/himanshugvu/deployment.git

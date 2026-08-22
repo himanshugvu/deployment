@@ -1,8 +1,13 @@
 apiVersion: security.istio.io/v1
 kind: PeerAuthentication
 metadata:
-  name: default-strict
+  name: default-permissive
   namespace: mesh-lab
 spec:
   mtls:
-    mode: STRICT
+    # PERMISSIVE keeps service-to-service calls on mutual TLS (the
+    # DestinationRules request ISTIO_MUTUAL) while allowing plaintext from
+    # callers without a sidecar - notably the Prometheus scraper in the
+    # monitoring namespace. Switch to STRICT once Prometheus itself runs
+    # inside the mesh.
+    mode: PERMISSIVE
