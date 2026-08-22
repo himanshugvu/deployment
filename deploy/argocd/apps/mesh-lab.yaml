@@ -12,6 +12,7 @@ spec:
     targetRevision: main
     path: deploy/helm/mesh-lab
     helm:
+      releaseName: mesh-lab
       parameters:
         - name: rollout.enabled
           value: "true"
