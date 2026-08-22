@@ -1,7 +1,7 @@
 replicaCount: 1
 
 image:
-  repository: ghcr.io/himanshugvu/mesh-lab
+  repository: ghcr.io/himanshugvu/mesh-lab-inventory
   tag: "0.0.1"
   pullPolicy: IfNotPresent
 
@@ -11,7 +11,7 @@ service:
   targetPort: 8080
 
 app:
-  name: mesh-lab
+  name: mesh-lab-inventory
   version: "v1"
 
 serviceAccount:

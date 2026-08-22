@@ -1,55 +1,124 @@
 # Mesh Lab Workspace
 
 This repository is organized as a platform workspace so independent services,
-an API gateway, Helm charts, and Argo CD manifests can live together.
+an API gateway, Helm charts, Istio mesh config, observability, and Argo CD
+manifests can live together.
 
 ## Layout
 
-- `services/mesh-lab` contains the current Spring Boot service
-- `deploy/helm/mesh-lab` contains the current Helm chart
-- `deploy/argocd/application.yaml` contains the Argo CD application manifest
-- `sources/` is mirrored reference material and should not be committed
+```text
+services/
+  mesh-lab             Spring Boot service (status + echo API)
+  mesh-lab-inventory   Spring Boot service (stock API), second mesh hop
+  mesh-lab-gateway     Spring Cloud Gateway routing /api/* to both services
+deploy/
+  helm/                One chart per service
+  istio/config/        Gateway, VirtualService, DestinationRules, mTLS, telemetry
+  observability/       kube-prometheus-stack values + docs
+  argocd/              Root application (app-of-apps) + per-component apps
+sources/               Mirrored reference material, not committed
+```
 
 ## Build and test
 
-Each app is independent and should be built from its own folder. For the
-current service:
+Each app is independent and should be built from its own folder:
 
 ```powershell
-cd services/mesh-lab
+cd services/mesh-lab           # repeat for mesh-lab-inventory, mesh-lab-gateway
 mvn test
 mvn package
 docker build -t ghcr.io/himanshugvu/mesh-lab:0.0.1 .
 ```
 
-## Kubernetes deploy
+Images to publish for a full stack: `mesh-lab`, `mesh-lab-inventory`,
+`mesh-lab-gateway` (all tagged `0.0.1`).
+
+### Run everything locally
+
+```powershell
+# terminal 1
+cd services/mesh-lab; mvn spring-boot:run -Dspring-boot.run.arguments=--server.port=8081
+# terminal 2
+cd services/mesh-lab-inventory; mvn spring-boot:run -Dspring-boot.run.arguments=--server.port=8082
+# terminal 3
+cd services/mesh-lab-gateway; mvn spring-boot:run -Dspring-boot.run.arguments=--server.port=9000
+
+curl http://localhost:9000/api/status
+curl http://localhost:9000/api/inventory/items
+```
+
+Gateway routes: `/api/status`, `/api/echo` -> mesh-lab; `/api/inventory/**`
+-> mesh-lab-inventory.
+
+## Kubernetes deploy (plain Helm)
+
+Charts render plain Deployments by default (no Rollouts CRDs needed):
 
 ```powershell
 kubectl create namespace mesh-lab
 helm upgrade --install mesh-lab deploy/helm/mesh-lab -n mesh-lab
+helm upgrade --install mesh-lab-mesh-lab-inventory deploy/helm/mesh-lab-inventory -n mesh-lab
+helm upgrade --install mesh-lab-gateway deploy/helm/mesh-lab-gateway -n mesh-lab
 kubectl get pods -n mesh-lab
-kubectl port-forward svc/mesh-lab-mesh-lab 8080:80 -n mesh-lab
 ```
 
-## Argo CD
+To scrape metrics, first install the Prometheus Operator CRDs (or the whole
+kube-prometheus-stack) and pass `--set monitoring.serviceMonitor.enabled=true`.
+
+## GitOps deploy (Argo CD)
 
 1. Install Argo CD in your cluster.
-2. Build and push `ghcr.io/himanshugvu/mesh-lab:0.0.1` to GitHub Container Registry.
-3. Apply the namespace and Argo CD application manifests.
+2. Push the three images to GitHub Container Registry.
+3. Apply the namespace and the root application:
 
 ```powershell
 kubectl apply -f deploy/argocd/namespace.yaml
 kubectl apply -f deploy/argocd/application.yaml
 ```
 
-Commit the repository root, but exclude mirrored metadata and generated output.
+`deploy/argocd/application.yaml` is an app-of-apps that syncs everything under
+`deploy/argocd/apps` in dependency order via sync waves:
+
+| Wave | Component | Source |
+| ---- | --------- | ------ |
+| 1 | istio-base 1.31.0, kube-prometheus-stack 88.5.2, argo-rollouts 2.41.1 | upstream charts |
+| 2 | istiod 1.31.0 | upstream chart |
+| 3 | kiali-server 1.26.2 | upstream chart |
+| 4 | mesh-config (Gateway/VirtualService/DestinationRules/mTLS/telemetry) | `deploy/istio/config` |
+| 5-6 | mesh-lab, mesh-lab-inventory, mesh-lab-gateway | local Helm charts |
+
+The service applications enable Argo Rollouts canaries and ServiceMonitors,
+so the platform layers must exist before them (the waves handle this;
+automated sync retries make convergence self-healing).
+
+## Progressive delivery
+
+With the Argo Rollouts controller installed, flip any service chart to canary:
+
+```powershell
+helm upgrade --install mesh-lab deploy/helm/mesh-lab -n mesh-lab --set rollout.enabled=true
+```
+
+Steps default to 25% -> pause 30s -> 60% -> pause 30s (see each chart's
+`values.yaml`). Watch progress with the rollouts plugin:
+`kubectl argo rollouts get rollout mesh-lab-mesh-lab -n mesh-lab`.
+
+## Observability and mesh
+
+- Grafana: `kubectl port-forward svc/monitoring-grafana 3000:80 -n monitoring`
+- Kiali: `kubectl port-forward svc/kiali 20001:20001 -n kiali`
+- Edge entrypoint: host `mesh-lab.local` via the Istio ingress gateway, see
+  `deploy/istio/README.md`
+
+Details: `deploy/observability/README.md`, `deploy/istio/README.md`.
 
 ## Planned expansion
 
-The intended next additions are:
+Done in this iteration: second service, API gateway, Istio + Kiali,
+Prometheus + telemetry, Argo Rollouts progressive delivery.
 
-- more services under `services/`
-- an API gateway service
-- Istio and Kiali
-- Prometheus and telemetry
-- Argo Rollouts for progressive delivery
+Possible next steps:
+
+- tracing backend (Jaeger/Tempo) wired into the Telemetry resource
+- CI workflow to build and push all three images
+- NetworkPolicies alongside the AuthorizationPolicy

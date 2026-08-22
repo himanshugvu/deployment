@@ -1,0 +1,30 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: mesh-lab-inventory
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/himanshugvu/deployment.git
+    targetRevision: main
+    path: deploy/helm/mesh-lab-inventory
+    helm:
+      parameters:
+        - name: rollout.enabled
+          value: "true"
+        - name: monitoring.serviceMonitor.enabled
+          value: "true"
+        - name: monitoring.serviceMonitor.additionalLabels.release
+          value: monitoring
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: mesh-lab
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

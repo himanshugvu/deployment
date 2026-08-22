@@ -1,0 +1,6 @@
+apiVersion: v2
+name: mesh-lab-gateway
+description: Helm chart for the mesh-lab Spring Cloud Gateway service
+type: application
+version: 0.1.0
+appVersion: "0.0.1"

@@ -1,0 +1,23 @@
+# Values for the kube-prometheus-stack Argo CD application.
+# Tuned for a small lab cluster: short retention, no alertmanager, and
+# ServiceMonitor discovery that is not restricted to this release's labels
+# so the monitors shipped with the mesh-lab charts are picked up.
+#
+# Installed as release name "monitoring", so services resolve as:
+#   http://monitoring-kube-prometheus-prometheus.monitoring.svc:9090
+#   http://monitoring-grafana.monitoring.svc:80
+
+alertmanager:
+  enabled: false
+
+grafana:
+  adminPassword: admin
+  service:
+    type: ClusterIP
+
+prometheus:
+  prometheusSpec:
+    retention: 3d
+    scrapeInterval: 15s
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false

@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: mesh-lab-inventory
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  info:
+    env:
+      enabled: true
+
+info:
+  app:
+    name: ${app.name}
+    version: ${app.version}
+
+app:
+  name: mesh-lab-inventory
+  version: local

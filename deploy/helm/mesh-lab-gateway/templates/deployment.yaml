@@ -6,14 +6,14 @@ apiVersion: apps/v1
 kind: Deployment
 {{- end }}
 metadata:
-  name: {{ include "mesh-lab.fullname" . }}
+  name: {{ include "mesh-lab-gateway.fullname" . }}
   labels:
-    {{- include "mesh-lab.labels" . | nindent 4 }}
+    {{- include "mesh-lab-gateway.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app.kubernetes.io/name: {{ include "mesh-lab.name" . }}
+      app.kubernetes.io/name: {{ include "mesh-lab-gateway.name" . }}
       app.kubernetes.io/instance: {{ .Release.Name }}
   {{- if .Values.rollout.enabled }}
   strategy:
@@ -24,13 +24,13 @@ spec:
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: {{ include "mesh-lab.name" . }}
+        app.kubernetes.io/name: {{ include "mesh-lab-gateway.name" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
         app.kubernetes.io/version: {{ .Values.app.version | quote }}
     spec:
-      serviceAccountName: {{ include "mesh-lab.serviceAccountName" . }}
+      serviceAccountName: {{ include "mesh-lab-gateway.serviceAccountName" . }}
       containers:
-        - name: mesh-lab
+        - name: mesh-lab-gateway
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
@@ -41,6 +41,10 @@ spec:
               value: {{ .Values.app.name | quote }}
             - name: APP_VERSION
               value: {{ .Values.app.version | quote }}
+            - name: MESH_LAB_URL
+              value: {{ .Values.config.meshLabUrl | quote }}
+            - name: MESH_LAB_INVENTORY_URL
+              value: {{ .Values.config.meshLabInventoryUrl | quote }}
           readinessProbe:
             httpGet:
               path: {{ .Values.probes.readiness.path }}

@@ -1,7 +1,7 @@
 replicaCount: 1
 
 image:
-  repository: ghcr.io/himanshugvu/mesh-lab
+  repository: ghcr.io/himanshugvu/mesh-lab-gateway
   tag: "0.0.1"
   pullPolicy: IfNotPresent
 
@@ -10,8 +10,14 @@ service:
   port: 80
   targetPort: 8080
 
+# In-cluster URLs of the backing services. These match the defaults used by
+# the README installs (release name "mesh-lab" in namespace "mesh-lab").
+config:
+  meshLabUrl: http://mesh-lab-mesh-lab.mesh-lab.svc.cluster.local:80
+  meshLabInventoryUrl: http://mesh-lab-mesh-lab-inventory.mesh-lab.svc.cluster.local:80
+
 app:
-  name: mesh-lab
+  name: mesh-lab-gateway
   version: "v1"
 
 serviceAccount:

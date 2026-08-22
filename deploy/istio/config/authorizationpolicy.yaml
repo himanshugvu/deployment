@@ -1,0 +1,19 @@
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: gateway-only-to-inventory
+  namespace: mesh-lab
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: mesh-lab-inventory
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            principals:
+              - cluster.local/ns/mesh-lab/sa/mesh-lab-mesh-lab-gateway
+              - cluster.local/ns/istio-system/sa/istio-ingressgateway
+      to:
+        - operation:
+            methods: ["GET", "POST"]

@@ -1,0 +1,47 @@
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: mesh-lab-gateway
+  namespace: mesh-lab
+spec:
+  host: mesh-lab-mesh-lab-gateway.mesh-lab.svc.cluster.local
+  trafficPolicy:
+    tls:
+      mode: ISTIO_MUTUAL
+    outlierDetection:
+      consecutive5xxErrors: 3
+      interval: 10s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50
+---
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: mesh-lab
+  namespace: mesh-lab
+spec:
+  host: mesh-lab-mesh-lab.mesh-lab.svc.cluster.local
+  trafficPolicy:
+    tls:
+      mode: ISTIO_MUTUAL
+    outlierDetection:
+      consecutive5xxErrors: 3
+      interval: 10s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50
+---
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: mesh-lab-inventory
+  namespace: mesh-lab
+spec:
+  host: mesh-lab-mesh-lab-inventory.mesh-lab.svc.cluster.local
+  trafficPolicy:
+    tls:
+      mode: ISTIO_MUTUAL
+    outlierDetection:
+      consecutive5xxErrors: 3
+      interval: 10s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50
