@@ -17,9 +17,42 @@ spec:
       app.kubernetes.io/instance: {{ .Release.Name }}
   {{- if .Values.rollout.enabled }}
   strategy:
+    {{- if eq .Values.rollout.strategy "blueGreen" }}
+    blueGreen:
+      activeService: {{ include "mesh-lab-gateway.fullname" . }}
+      previewService: {{ include "mesh-lab-gateway.fullname" . }}-preview
+      autoPromotionEnabled: {{ .Values.rollout.blueGreen.autoPromotionEnabled }}
+      scaleDownDelaySeconds: {{ .Values.rollout.blueGreen.scaleDownDelaySeconds }}
+      postPromotionAnalysis:
+        templates:
+          - templateName: {{ include "mesh-lab-gateway.fullname" . }}-success-rate
+        args:
+          - name: rollouts-pod-template-hash
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['rollouts-pod-template-hash']
+    {{- else }}
     canary:
+      maxSurge: {{ .Values.rollout.canary.maxSurge }}
       steps:
-        {{- toYaml .Values.rollout.canary.steps | nindent 8 }}
+        {{- range .Values.rollout.canary.steps }}
+        {{- if hasKey . "setWeight" }}
+        - setWeight: {{ .setWeight }}
+        {{- else if hasKey . "pause" }}
+        - pause:
+            duration: {{ .pause.duration }}
+        {{- else if hasKey . "analysis" }}
+        - analysis:
+            templates:
+              - templateName: {{ include "mesh-lab-gateway.fullname" $ }}-success-rate
+            args:
+              - name: rollouts-pod-template-hash
+                valueFrom:
+                  fieldRef:
+                    fieldPath: metadata.labels['rollouts-pod-template-hash']
+        {{- end }}
+        {{- end }}
+    {{- end }}
   {{- end }}
   template:
     metadata:
@@ -45,6 +78,10 @@ spec:
               value: {{ .Values.config.meshLabUrl | quote }}
             - name: MESH_LAB_INVENTORY_URL
               value: {{ .Values.config.meshLabInventoryUrl | quote }}
+            {{- range .Values.extraEnv }}
+            - name: {{ .name }}
+              value: {{ .value | quote }}
+            {{- end }}
           readinessProbe:
             httpGet:
               path: {{ .Values.probes.readiness.path }}

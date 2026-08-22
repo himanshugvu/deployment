@@ -2,7 +2,7 @@ replicaCount: 1
 
 image:
   repository: ghcr.io/himanshugvu/mesh-lab-gateway
-  tag: "0.0.1"
+  tag: "0.0.2"
   pullPolicy: IfNotPresent
 
 service:
@@ -24,6 +24,9 @@ serviceAccount:
   create: true
   name: ""
 
+# Additional container env vars.
+extraEnv: []
+
 resources:
   requests:
     cpu: 100m
@@ -43,6 +46,8 @@ probes:
     periodSeconds: 10
 
 monitoring:
+  # kube-prometheus-stack API used by rollout AnalysisTemplates.
+  prometheusAddress: http://monitoring-kube-prometheus-prometheus.monitoring.svc:9090
   serviceMonitor:
     enabled: false
     interval: 15s
@@ -51,11 +56,26 @@ monitoring:
 rollout:
   # Requires the Argo Rollouts controller and CRDs to be installed first.
   enabled: false
+  # canary | blueGreen - the edge gateway defaults to blue-green for an
+  # instant switchback if post-promotion analysis detects regressions.
+  strategy: blueGreen
+  analysis:
+    intervalSeconds: 20
+    measurements: 5
+    failureLimit: 0
+    successRateThreshold: "0.90"
+    lookbackSeconds: 120
   canary:
+    maxSurge: 1
     steps:
       - setWeight: 25
       - pause:
           duration: 30s
+      - analysis: {}
       - setWeight: 60
       - pause:
           duration: 30s
+      - analysis: {}
+  blueGreen:
+    autoPromotionEnabled: true
+    scaleDownDelaySeconds: 30

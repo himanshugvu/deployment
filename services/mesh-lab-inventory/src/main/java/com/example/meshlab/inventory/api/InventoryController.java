@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @RestController
@@ -29,17 +30,21 @@ public class InventoryController {
 
     private final String appName;
     private final String appVersion;
+    private final int chaosErrorRate;
 
     public InventoryController(
             @Value("${app.name}") String appName,
-            @Value("${app.version}") String appVersion
+            @Value("${app.version}") String appVersion,
+            @Value("${chaos.error-rate:0}") int chaosErrorRate
     ) {
         this.appName = appName;
         this.appVersion = appVersion;
+        this.chaosErrorRate = chaosErrorRate;
     }
 
     @GetMapping("/status")
     public ServiceStatusResponse status() {
+        maybeInjectFailure();
         return new ServiceStatusResponse(
                 appName,
                 appVersion,
@@ -49,6 +54,7 @@ public class InventoryController {
 
     @GetMapping("/items")
     public List<InventoryItemResponse> items() {
+        maybeInjectFailure();
         return stock.entrySet().stream()
                 .sorted(Map.Entry.comparingByKey())
                 .map(entry -> toItem(entry.getKey(), entry.getValue()))
@@ -58,6 +64,7 @@ public class InventoryController {
     @PostMapping("/adjust")
     @ResponseStatus(HttpStatus.CREATED)
     public AdjustStockResponse adjust(@RequestBody @Valid AdjustStockRequest request) {
+        maybeInjectFailure();
         AtomicInteger quantity = stock.get(request.itemId());
         if (quantity == null) {
             throw new UnknownItemException(request.itemId());
@@ -67,6 +74,12 @@ public class InventoryController {
                 request.itemId(),
                 quantity.addAndGet(request.delta())
         );
+    }
+
+    void maybeInjectFailure() {
+        if (chaosErrorRate > 0 && ThreadLocalRandom.current().nextInt(100) < chaosErrorRate) {
+            throw new ChaosException();
+        }
     }
 
     private static InventoryItemResponse toItem(int id, AtomicInteger quantity) {

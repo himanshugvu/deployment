@@ -16,6 +16,8 @@ spec:
       parameters:
         - name: rollout.enabled
           value: "true"
+        - name: rollout.strategy
+          value: canary
         - name: monitoring.serviceMonitor.enabled
           value: "true"
         - name: monitoring.serviceMonitor.additionalLabels.release

@@ -26,3 +26,6 @@ info:
 app:
   name: mesh-lab-inventory
   version: local
+
+chaos:
+  error-rate: ${CHAOS_ERROR_RATE:0}

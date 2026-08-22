@@ -17,4 +17,12 @@ spec:
     - port: http
       path: /actuator/prometheus
       interval: {{ .Values.monitoring.serviceMonitor.interval }}
+      # Expose the Argo Rollouts pod-template hash as a Prometheus-safe
+      # label so AnalysisTemplates can measure a single ReplicaSet.
+      relabelings:
+        - sourceLabels: [__meta_kubernetes_pod_label_rollouts_pod_template_hash]
+          targetLabel: rollouts_pod_template_hash
+          action: replace
+          regex: (.+)
+          replacement: $1
 {{- end }}

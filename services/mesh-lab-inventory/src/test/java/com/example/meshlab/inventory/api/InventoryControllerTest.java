@@ -4,12 +4,14 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class InventoryControllerTest {
 
-    private final InventoryController controller = new InventoryController("mesh-lab-inventory", "test");
+    private final InventoryController controller = new InventoryController("mesh-lab-inventory", "test", 0);
+    private final InventoryController alwaysFailing = new InventoryController("mesh-lab-inventory", "test", 100);
 
     @Test
     void statusEndpointReturnsServiceInfo() {
@@ -40,5 +42,17 @@ class InventoryControllerTest {
     void adjustEndpointRejectsUnknownItem() {
         assertThrows(UnknownItemException.class,
                 () -> controller.adjust(new AdjustStockRequest(99, 1)));
+    }
+
+    @Test
+    void chaosDisabledByDefault() {
+        assertDoesNotThrow(() -> controller.items());
+    }
+
+    @Test
+    void chaosRateHundredAlwaysFails() {
+        assertThrows(ChaosException.class, () -> alwaysFailing.status());
+        assertThrows(ChaosException.class, () -> alwaysFailing.items());
+        assertThrows(ChaosException.class, () -> alwaysFailing.adjust(new AdjustStockRequest(1, 1)));
     }
 }
