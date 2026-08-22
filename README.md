@@ -81,9 +81,9 @@ kubectl apply -f deploy/argocd/application.yaml
 
 | Wave | Component | Source |
 | ---- | --------- | ------ |
-| 1 | istio-base 1.31.0, kube-prometheus-stack 88.5.2, argo-rollouts 2.41.1 | upstream charts |
-| 2 | istiod 1.31.0 | upstream chart |
-| 3 | kiali-server 1.26.2 | upstream chart |
+| 1 | istio-base 1.30.3, kube-prometheus-stack 88.5.2, argo-rollouts 2.41.1 | upstream charts |
+| 2 | istiod 1.30.3 | upstream chart |
+| 3 | kiali-server 2.30.0 | upstream chart |
 | 4 | mesh-config (Gateway/VirtualService/DestinationRules/mTLS/telemetry) | `deploy/istio/config` |
 | 5-6 | mesh-lab, mesh-lab-inventory, mesh-lab-gateway | local Helm charts |
 

@@ -10,7 +10,7 @@ spec:
   source:
     repoURL: https://kiali.org/helm-charts
     chart: kiali-server
-    targetRevision: 1.26.2
+    targetRevision: 2.30.0
     helm:
       values: |
         auth:

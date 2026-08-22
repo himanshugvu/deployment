@@ -4,9 +4,9 @@ Platform components are installed by Argo CD applications:
 
 | App | Chart | Namespace |
 | --- | --- | --- |
-| `istio-base` | `base` 1.31.0 | istio-system |
-| `istiod` | `istiod` 1.31.0 | istio-system |
-| `kiali` | `kiali-server` 1.26.2 | kiali |
+| `istio-base` | `base` 1.30.3 | istio-system |
+| `istiod` | `istiod` 1.30.3 | istio-system |
+| `kiali` | `kiali-server` 2.30.0 | kiali |
 
 The `config/` folder holds the mesh configuration for the `mesh-lab`
 namespace and is synced by the `mesh-config` Argo CD application:
