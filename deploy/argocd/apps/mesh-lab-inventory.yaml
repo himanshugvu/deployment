@@ -23,7 +23,7 @@ spec:
           value: "50"
         # Force a fresh ReplicaSet so the drill exercises a new canary.
         - name: app.version
-          value: v2
+          value: v3
         - name: monitoring.serviceMonitor.enabled
           value: "true"
         - name: monitoring.serviceMonitor.additionalLabels.release
