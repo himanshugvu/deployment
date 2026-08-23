@@ -1,9 +1,13 @@
 spring:
   application:
     name: mesh-lab-inventory
+  lifecycle:
+    # Drain in-flight requests on SIGTERM before stopping.
+    timeout-per-shutdown-phase: 20s
 
 server:
   port: 8080
+  shutdown: graceful
 
 management:
   endpoints:

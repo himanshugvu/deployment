@@ -45,3 +45,37 @@ spec:
       interval: 10s
       baseEjectionTime: 30s
       maxEjectionPercent: 50
+
+---
+# Canary-split companions for the two services using Istio traffic routing.
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: mesh-lab-canary
+  namespace: mesh-lab
+spec:
+  host: mesh-lab-mesh-lab-canary.mesh-lab.svc.cluster.local
+  trafficPolicy:
+    tls:
+      mode: ISTIO_MUTUAL
+    outlierDetection:
+      consecutive5xxErrors: 3
+      interval: 10s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50
+---
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: mesh-lab-inventory-canary
+  namespace: mesh-lab
+spec:
+  host: mesh-lab-mesh-lab-inventory-canary.mesh-lab.svc.cluster.local
+  trafficPolicy:
+    tls:
+      mode: ISTIO_MUTUAL
+    outlierDetection:
+      consecutive5xxErrors: 3
+      interval: 10s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50

@@ -1,0 +1,22 @@
+{{- if and .Values.rollout.enabled (eq .Values.rollout.strategy "canary") .Values.rollout.canary.trafficRouting.enabled }}
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: {{ include "mesh-lab-inventory.fullname" . }}-vsvc
+  labels:
+    {{- include "mesh-lab-inventory.labels" . | nindent 4 }}
+spec:
+  hosts:
+    - {{ include "mesh-lab-inventory.fullname" . }}
+  http:
+    - name: primary
+      route:
+        # Weights are rewritten by the Argo Rollouts controller during steps;
+        # Argo CD ignores these fields (see the Application ignoreDifferences).
+        - destination:
+            host: {{ include "mesh-lab-inventory.fullname" . }}
+          weight: 100
+        - destination:
+            host: {{ include "mesh-lab-inventory.fullname" . }}-canary
+          weight: 0
+{{- end }}

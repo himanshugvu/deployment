@@ -33,6 +33,16 @@ spec:
     {{- else }}
     canary:
       maxSurge: {{ .Values.rollout.canary.maxSurge }}
+      {{- if .Values.rollout.canary.trafficRouting.enabled }}
+      stableService: {{ include "mesh-lab-inventory.fullname" . }}
+      canaryService: {{ include "mesh-lab-inventory.fullname" . }}-canary
+      trafficRouting:
+        istio:
+          virtualService:
+            name: {{ include "mesh-lab-inventory.fullname" . }}-vsvc
+            routes:
+              - primary
+      {{- end }}
       steps:
         {{- range .Values.rollout.canary.steps }}
         {{- if hasKey . "setWeight" }}
@@ -60,10 +70,24 @@ spec:
         app.kubernetes.io/version: {{ .Values.app.version | quote }}
     spec:
       serviceAccountName: {{ include "mesh-lab-inventory.serviceAccountName" . }}
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      terminationGracePeriodSeconds: 35
+      volumes:
+        - name: tmp
+          emptyDir: {}
       containers:
         - name: mesh-lab-inventory
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            runAsNonRoot: true
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
           ports:
             - name: http
               containerPort: {{ .Values.service.targetPort }}
@@ -90,5 +114,8 @@ spec:
               port: http
             initialDelaySeconds: {{ .Values.probes.liveness.initialDelaySeconds }}
             periodSeconds: {{ .Values.probes.liveness.periodSeconds }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
           resources:
             {{- toYaml .Values.resources | nindent 12 }}

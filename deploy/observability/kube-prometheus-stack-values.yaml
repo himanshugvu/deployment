@@ -11,7 +11,14 @@ alertmanager:
   enabled: false
 
 grafana:
-  adminPassword: admin
+  # Credentials come from a Secret created out-of-band (never committed):
+  #   kubectl -n monitoring create secret generic grafana-admin-credentials \
+  #     --from-literal=admin-user=admin \
+  #     --from-literal=admin-password='<pick-a-real-password>'
+  admin:
+    existingSecret: grafana-admin-credentials
+    userKey: admin-user
+    passwordKey: admin-password
   service:
     type: ClusterIP
 

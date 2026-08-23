@@ -1,0 +1,14 @@
+﻿{{- if .Values.podDisruptionBudget.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "mesh-lab-inventory.fullname" . }}
+  labels:
+    {{- include "mesh-lab-inventory.labels" . | nindent 4 }}
+spec:
+  minAvailable: {{ .Values.podDisruptionBudget.minAvailable }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "mesh-lab-inventory.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}

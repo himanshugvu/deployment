@@ -75,6 +75,17 @@ rollout:
       - pause:
           duration: 30s
       - analysis: {}
+    # Exact weighted splitting via Istio VirtualService (requires sidecars).
+    # Renders a -canary Service and a VirtualService; the Rollout controller
+    # manages their selectors/weights during steps.
+    trafficRouting:
+      enabled: false
   blueGreen:
     autoPromotionEnabled: true
     scaleDownDelaySeconds: 30
+
+podDisruptionBudget:
+  # Meaningful only when replicaCount > 1: minAvailable=1 on a single replica
+  # would block all node drains.
+  enabled: false
+  minAvailable: 1

@@ -18,10 +18,23 @@ spec:
           value: "true"
         - name: rollout.strategy
           value: canary
+        - name: rollout.canary.trafficRouting.enabled
+          value: "true"
         - name: monitoring.serviceMonitor.enabled
           value: "true"
         - name: monitoring.serviceMonitor.additionalLabels.release
           value: monitoring
+  ignoreDifferences:
+    # The Rollouts controller rewrites these during canary steps; without
+    # this, selfHeal would fight the traffic splitter forever.
+    - group: networking.istio.io
+      kind: VirtualService
+      jqPathExpressions:
+        - .spec.http[].route[].weight
+    - group: ""
+      kind: Service
+      jsonPointers:
+        - /spec/selector
   destination:
     server: https://kubernetes.default.svc
     namespace: mesh-lab

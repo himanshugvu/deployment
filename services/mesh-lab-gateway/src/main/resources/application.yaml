@@ -1,6 +1,9 @@
-spring:
+﻿spring:
   application:
     name: mesh-lab-gateway
+  lifecycle:
+    # Drain in-flight requests on SIGTERM before stopping.
+    timeout-per-shutdown-phase: 20s
   cloud:
     gateway:
       server:
@@ -20,6 +23,7 @@ spring:
 
 server:
   port: 8080
+  shutdown: graceful
 
 management:
   endpoints:
