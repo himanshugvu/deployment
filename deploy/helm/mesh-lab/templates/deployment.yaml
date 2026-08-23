@@ -1,4 +1,4 @@
-{{- if .Values.rollout.enabled }}
+﻿{{- if .Values.rollout.enabled }}
 apiVersion: argoproj.io/v1alpha1
 kind: Rollout
 {{- else }}
@@ -29,8 +29,7 @@ spec:
         args:
           - name: rollouts-pod-template-hash
             valueFrom:
-              fieldRef:
-                fieldPath: metadata.labels['rollouts-pod-template-hash']
+              podTemplateHashValue: Latest
     {{- else }}
     canary:
       maxSurge: {{ .Values.rollout.canary.maxSurge }}
@@ -48,8 +47,7 @@ spec:
             args:
               - name: rollouts-pod-template-hash
                 valueFrom:
-                  fieldRef:
-                    fieldPath: metadata.labels['rollouts-pod-template-hash']
+                  podTemplateHashValue: Latest
         {{- end }}
         {{- end }}
     {{- end }}
