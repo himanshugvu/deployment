@@ -18,6 +18,9 @@ spec:
           value: "true"
         - name: rollout.strategy
           value: canary
+        # Rollback drill: inject HTTP 500s on the canary ReplicaSet.
+        - name: chaos.errorRate
+          value: "50"
         - name: monitoring.serviceMonitor.enabled
           value: "true"
         - name: monitoring.serviceMonitor.additionalLabels.release
