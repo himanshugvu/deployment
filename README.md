@@ -93,15 +93,45 @@ automated sync retries make convergence self-healing).
 
 ## Progressive delivery
 
-With the Argo Rollouts controller installed, flip any service chart to canary:
+With the Argo Rollouts controller installed, flip any service chart to a
+managed rollout strategy:
 
 ```powershell
-helm upgrade --install mesh-lab deploy/helm/mesh-lab -n mesh-lab --set rollout.enabled=true
+helm upgrade --install mesh-lab deploy/helm/mesh-lab -n mesh-lab --set rollout.enabled=true --set rollout.strategy=canary
 ```
 
-Steps default to 25% -> pause 30s -> 60% -> pause 30s (see each chart's
-`values.yaml`). Watch progress with the rollouts plugin:
-`kubectl argo rollouts get rollout mesh-lab-mesh-lab -n mesh-lab`.
+- `rollout.strategy: canary` (mesh-lab, mesh-lab-inventory): steps run
+  25% -> pause 30s -> **analysis gate** -> 60% -> pause 30s -> gate.
+- `rollout.strategy: blueGreen` (gateway default): preview service warms up,
+  traffic switches automatically, then post-promotion analysis watches live
+  traffic and rolls back on breach.
+
+### Automatic rollback on failures
+
+Every chart renders an `AnalysisTemplate` that queries Prometheus every 20s
+(5 measurements) and computes the success rate of exactly the new ReplicaSet:
+
+```promql
+1 - (
+  sum(increase(http_server_requests_seconds_count{namespace="...", status=~"5..", rollouts_pod_template_hash="<hash>"}[120s]))
+  / clamp_min(sum(increase(http_server_requests_seconds_count{..., rollouts_pod_template_hash="<hash>"}[120s])), 1)
+)
+```
+
+If success drops below `rollout.analysis.successRateThreshold` (default
+**0.90**), the measurement fails and Argo Rollouts aborts the update,
+scaling the bad ReplicaSet back to zero automatically.
+
+The ServiceMonitor relabels each pod's `rollouts-pod-template-hash` into a
+Prometheus-safe label so the query isolates the new ReplicaSet. Verified in
+the E2E lab: a canary with `chaos.errorRate=50` measured a 61% success rate
+and was rolled back without touching stable traffic.
+
+To drill rollbacks yourself, inject errors via an Argo CD parameter (or
+`--set chaos.errorRate=50`) and generate traffic against the gateway.
+
+Watch progress: `kubectl argo rollouts get rollout mesh-lab-mesh-lab-inventory
+-n mesh-lab`.
 
 ## Observability and mesh
 
