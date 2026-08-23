@@ -62,6 +62,29 @@ env:
 Spring relaxed binding maps `CHAOS_ERROR_RATE` -> `chaos.error-rate`
 property; application.yaml bridges it with `${CHAOS_ERROR_RATE:0}`.
 
+## Security context & graceful shutdown
+
+Every workload runs non-root with a locked-down container:
+
+```yaml
+spec:
+  securityContext: { runAsNonRoot: true, runAsUser: 10001, fsGroup: 10001, seccompProfile: RuntimeDefault }
+  terminationGracePeriodSeconds: 35
+  volumes: [{ name: tmp, emptyDir: {} }]
+containers:
+  - securityContext:
+      readOnlyRootFilesystem: true
+      allowPrivilegeEscalation: false
+      capabilities: { drop: [ALL] }
+    volumeMounts: [{ name: tmp, mountPath: /tmp }]   # JVM hsperfdata + Boot tmp
+```
+
+Lesson from the lab: setting `runAsNonRoot` without an explicit
+`runAsUser` on an image whose `USER` is root fails at container creation -
+always pin the UID. Apps also enable `server.shutdown: graceful` (20s drain)
+so SIGTERM finishes in-flight requests; the JVM sizes heap from the cgroup
+limit via `-XX:MaxRAMPercentage=75.0`.
+
 ## Pod labels = analysis keys
 
 ```yaml

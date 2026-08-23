@@ -57,6 +57,33 @@ version to a fraction of traffic and *requires evidence* (Prometheus success
 rate) before proceeding. A bad build dies at step 2 instead of serving 100%
 of users.
 
+## Istio traffic routing (exact weights)
+
+With `rollout.canary.trafficRouting.enabled: true` the chart renders a
+`<fullname>-canary` Service and a `<fullname>-vsvc` VirtualService, and the
+Rollout gains:
+
+```yaml
+canary:
+  stableService: <fullname>
+  canaryService: <fullname>-canary
+  trafficRouting:
+    istio:
+      virtualService:
+        name: <fullname>-vsvc
+        routes: [primary]
+```
+
+The controller rewrites both Services' selectors with the
+`rollouts-pod-template-hash` and drives exact VirtualService weights per
+step - observed live: `75/25` at setWeight 25 with a single replica each,
+restored to `100/0` after promotion. Without this, `setWeight` is only
+approximated by pod counts.
+
+GitOps caveat handled in the Argo CD Applications via `ignoreDifferences`:
+VirtualService weights and Service selectors are mutated at runtime; without
+the ignore rules `selfHeal` would fight the traffic splitter forever.
+
 ## Key fields cheat sheet
 
 | Field | Meaning |
