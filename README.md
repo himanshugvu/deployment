@@ -16,6 +16,7 @@ deploy/
   istio/config/        Gateway, VirtualService, DestinationRules, mTLS, telemetry
   observability/       kube-prometheus-stack values + docs
   argocd/              Root application (app-of-apps) + per-component apps
+docs/                  15-part learning series (start at docs/README.md)
 sources/               Mirrored reference material, not committed
 ```
 
