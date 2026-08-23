@@ -7,7 +7,8 @@ in this folder.
 ## What you get
 
 - Prometheus with a 3 day retention and 15s scrape interval
-- Grafana (admin / admin by default, change for anything shared)
+- Grafana (admin credentials come from the `grafana-admin-credentials`
+  Secret - see `kube-prometheus-stack-values.yaml` for the create command)
 - Prometheus Operator CRDs, so `ServiceMonitor` resources are honored
 
 Alertmanager is disabled to keep the lab footprint small.

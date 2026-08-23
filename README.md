@@ -146,10 +146,13 @@ Details: `deploy/observability/README.md`, `deploy/istio/README.md`.
 ## Planned expansion
 
 Done in this iteration: second service, API gateway, Istio + Kiali,
-Prometheus + telemetry, Argo Rollouts progressive delivery.
+Prometheus + telemetry, Argo Rollouts progressive delivery (canary with
+Istio traffic routing + blue-green), Prometheus-gated automatic rollback,
+CI (GitHub Actions: tests, helm lint, GHCR publish), security contexts and
+graceful shutdown.
 
 Possible next steps:
 
 - tracing backend (Jaeger/Tempo) wired into the Telemetry resource
-- CI workflow to build and push all three images
 - NetworkPolicies alongside the AuthorizationPolicy
+- HPA and PodDisruptionBudget enablement once replicas scale out
