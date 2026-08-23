@@ -21,6 +21,11 @@ serviceAccount:
 # Additional container env vars, e.g. CHAOS_ERROR_RATE for failure drills.
 extraEnv: []
 
+# Failure injection for rollout rollback drills (0-100 percent of requests
+# answered with HTTP 500). Keep 0 outside of tests.
+chaos:
+  errorRate: "0"
+
 resources:
   requests:
     cpu: 100m

@@ -24,7 +24,7 @@ serviceAccount:
   create: true
   name: ""
 
-# Additional container env vars.
+# Additional container env vars, e.g. CHAOS_ERROR_RATE for failure drills.
 extraEnv: []
 
 resources:

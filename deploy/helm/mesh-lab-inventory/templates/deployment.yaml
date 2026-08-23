@@ -74,6 +74,8 @@ spec:
               value: {{ .Values.app.name | quote }}
             - name: APP_VERSION
               value: {{ .Values.app.version | quote }}
+            - name: CHAOS_ERROR_RATE
+              value: {{ .Values.chaos.errorRate | quote }}
             {{- range .Values.extraEnv }}
             - name: {{ .name }}
               value: {{ .value | quote }}
